@@ -47,8 +47,9 @@ int ServerMain()
 
     uint8_t privateKey[KeyBytes];
     memset( privateKey, 0, KeyBytes );
-
+    
     Server server( GetDefaultAllocator(), privateKey, Address( "127.0.0.1", ServerPort ), config, adapter, time );
+    
 
     server.Start( MaxClients );
 
@@ -63,11 +64,15 @@ int ServerMain()
     while ( !quit )
     {
         server.SendPackets();
-
         server.ReceivePackets();
+        
+        for(int i = 0; i < MaxClients; i++) {
+            if(server.IsClientConnected(i)) {
+                printf("client #%d is connected\n", i);
+            }
+        }
 
         time += deltaTime;
-
         server.AdvanceTime( time );
 
         if ( !server.IsRunning() )
@@ -94,6 +99,7 @@ int main()
     yojimbo_log_level( YOJIMBO_LOG_LEVEL_INFO );
 
     srand( (unsigned int) time( NULL ) );
+
 
     int result = ServerMain();
 
