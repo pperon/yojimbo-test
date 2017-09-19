@@ -51,8 +51,12 @@ int ClientMain( int argc, char * argv[] )
     printf( "client id is %.16" PRIx64 "\n", clientId );
 
     ClientServerConfig config;
+    config.numChannels = 1;
+    config.channel[0].type = CHANNEL_TYPE_RELIABLE_ORDERED;
 
     Client client( GetDefaultAllocator(), Address("0.0.0.0"), config, adapter, time );
+    client.SetLatency(1000.0f);
+    client.SetJitter(251.0f);
 
     Address serverAddress( "127.0.0.1", ServerPort );
 
@@ -83,8 +87,25 @@ int ClientMain( int argc, char * argv[] )
     while ( !quit )
     {
         client.SendPackets();
-
         client.ReceivePackets();
+
+        while(true) {
+            Message * message = client.ReceiveMessage(0);
+            if(!message) {
+                break;
+            }
+
+            switch(message->GetType()) {
+                case TEST_MESSAGE:
+                {
+                    TestMessage *testMessage = (TestMessage *)message;
+                    printf("Received message with sequence: %d\n", testMessage->sequence);
+                }
+                break;
+            }
+
+            client.ReleaseMessage(message);
+        }
 
         if ( client.IsDisconnected() )
             break;

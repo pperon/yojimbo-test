@@ -44,12 +44,17 @@ int ServerMain()
     double time = 100.0;
 
     ClientServerConfig config;
+    config.numChannels = 1;
+    config.channel[0].type = CHANNEL_TYPE_RELIABLE_ORDERED;
 
     uint8_t privateKey[KeyBytes];
     memset( privateKey, 0, KeyBytes );
     
     Server server( GetDefaultAllocator(), privateKey, Address( "127.0.0.1", ServerPort ), config, adapter, time );
     
+    printf("Setting latency...\n");
+    server.SetLatency(1001.0f);
+    server.SetJitter(252.0f);
 
     server.Start( MaxClients );
 
@@ -59,7 +64,9 @@ int ServerMain()
 
     const double deltaTime = 0.01f;
 
-    signal( SIGINT, interrupt_handler );    
+    signal( SIGINT, interrupt_handler ); 
+
+    uint16_t  sequence = 0;
 
     while ( !quit )
     {
@@ -68,7 +75,13 @@ int ServerMain()
         
         for(int i = 0; i < MaxClients; i++) {
             if(server.IsClientConnected(i)) {
-                printf("client #%d is connected\n", i);
+                TestMessage *message = (TestMessage *)server.CreateMessage(i, TEST_MESSAGE);
+                if(message) {
+                    message->sequence = sequence;
+                    printf("sending message with sequence: %d\n", sequence);
+                    server.SendMessage(i, 0, message);
+                    sequence++;
+                }
             }
         }
 
