@@ -55,8 +55,8 @@ int ClientMain( int argc, char * argv[] )
     config.channel[0].type = CHANNEL_TYPE_RELIABLE_ORDERED;
 
     Client client( GetDefaultAllocator(), Address("0.0.0.0"), config, adapter, time );
-    client.SetLatency(1000.0f);
-    client.SetJitter(251.0f);
+    client.SetLatency(250.0f);
+    client.SetJitter(250.0f);
 
     Address serverAddress( "127.0.0.1", ServerPort );
 

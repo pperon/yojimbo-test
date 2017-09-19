@@ -52,11 +52,10 @@ int ServerMain()
     
     Server server( GetDefaultAllocator(), privateKey, Address( "127.0.0.1", ServerPort ), config, adapter, time );
     
-    printf("Setting latency...\n");
-    server.SetLatency(1001.0f);
-    server.SetJitter(252.0f);
-
     server.Start( MaxClients );
+    
+    server.SetLatency(250.0f);
+    server.SetJitter(250.0f);
 
     char addressString[256];
     server.GetAddress().ToString( addressString, sizeof( addressString ) );
