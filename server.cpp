@@ -28,6 +28,9 @@
 
 #include "shared.h"
 
+#define RELIABLE_CHANNEL 0
+#define UNRELIABLE_CHANNEL 1
+
 using namespace yojimbo;
 
 static volatile int quit = 0;
@@ -44,8 +47,9 @@ int ServerMain()
     double time = 100.0;
 
     ClientServerConfig config;
-    config.numChannels = 1;
+    config.numChannels = 2;
     config.channel[0].type = CHANNEL_TYPE_RELIABLE_ORDERED;
+    config.channel[1].type = CHANNEL_TYPE_UNRELIABLE_UNORDERED;
 
     uint8_t privateKey[KeyBytes];
     memset( privateKey, 0, KeyBytes );
@@ -56,6 +60,7 @@ int ServerMain()
     
     server.SetLatency(250.0f);
     server.SetJitter(250.0f);
+    server.SetPacketLoss(50.0f);
 
     char addressString[256];
     server.GetAddress().ToString( addressString, sizeof( addressString ) );
@@ -78,7 +83,7 @@ int ServerMain()
                 if(message) {
                     message->sequence = sequence;
                     printf("sending message with sequence: %d\n", sequence);
-                    server.SendMessage(i, 0, message);
+                    server.SendMessage(i, UNRELIABLE_CHANNEL, message);
                     sequence++;
                 }
             }

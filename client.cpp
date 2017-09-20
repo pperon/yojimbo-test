@@ -31,6 +31,9 @@
 #include <signal.h>
 #include "shared.h"
 
+#define RELIABLE_CHANNEL 0
+#define UNRELIABLE_CHANNEL 1
+
 using namespace yojimbo;
 
 static volatile int quit = 0;
@@ -51,8 +54,9 @@ int ClientMain( int argc, char * argv[] )
     printf( "client id is %.16" PRIx64 "\n", clientId );
 
     ClientServerConfig config;
-    config.numChannels = 1;
+    config.numChannels = 2;
     config.channel[0].type = CHANNEL_TYPE_RELIABLE_ORDERED;
+    config.channel[1].type = CHANNEL_TYPE_UNRELIABLE_UNORDERED;
 
     Client client( GetDefaultAllocator(), Address("0.0.0.0"), config, adapter, time );
     client.SetLatency(250.0f);
@@ -90,7 +94,7 @@ int ClientMain( int argc, char * argv[] )
         client.ReceivePackets();
 
         while(true) {
-            Message * message = client.ReceiveMessage(0);
+            Message * message = client.ReceiveMessage(UNRELIABLE_CHANNEL);
             if(!message) {
                 break;
             }
