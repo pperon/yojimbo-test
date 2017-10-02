@@ -27,6 +27,7 @@
 #include <time.h>
 
 #include "shared.h"
+#include "foo.h"
 
 #define RELIABLE_CHANNEL 0
 #define UNRELIABLE_CHANNEL 1
