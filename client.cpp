@@ -29,7 +29,8 @@
 #include <inttypes.h>
 #include <time.h>
 #include <signal.h>
-#include "shared.h"
+//#include "shared.h"
+#include "foo.h"
 
 #define RELIABLE_CHANNEL 0
 #define UNRELIABLE_CHANNEL 1
@@ -58,11 +59,11 @@ int ClientMain( int argc, char * argv[] )
     config.channel[0].type = CHANNEL_TYPE_RELIABLE_ORDERED;
     config.channel[1].type = CHANNEL_TYPE_UNRELIABLE_UNORDERED;
 
-    Client client( GetDefaultAllocator(), Address("0.0.0.0"), config, adapter, time );
-    client.SetLatency(250.0f);
-    client.SetJitter(250.0f);
+    Client client( GetDefaultAllocator(), Address("0.0.0.0"), config, foo_adapter, time );
+    client.SetLatency(0.0f);
+    client.SetJitter(0.0f);
 
-    Address serverAddress( "127.0.0.1", ServerPort );
+    Address serverAddress( "127.0.0.1", server_port );
 
     if ( argc == 2 )
     {
@@ -70,7 +71,7 @@ int ClientMain( int argc, char * argv[] )
         if ( commandLineAddress.IsValid() )
         {
             if ( commandLineAddress.GetPort() == 0 )
-                commandLineAddress.SetPort( ServerPort );
+                commandLineAddress.SetPort( server_port );
             serverAddress = commandLineAddress;
         }
     }
@@ -104,6 +105,11 @@ int ClientMain( int argc, char * argv[] )
                 {
                     TestMessage *testMessage = (TestMessage *)message;
                     printf("Received message with sequence: %d\n", testMessage->sequence);
+                }
+                case FOO_MESSAGE:
+                {
+                    FooMessage *foo_message = (FooMessage *)message;
+                    printf("GOT FOO YO %d\n", foo_message->foo);
                 }
                 break;
             }

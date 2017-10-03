@@ -26,7 +26,7 @@
 #include <signal.h>
 #include <time.h>
 
-#include "shared.h"
+//#include "shared.h"
 #include "foo.h"
 
 #define RELIABLE_CHANNEL 0
@@ -43,7 +43,7 @@ void interrupt_handler( int /*dummy*/ )
 
 int ServerMain()
 {
-    printf( "started server on port %d (insecure)\n", ServerPort );
+    printf( "started server on port %d (insecure)\n", server_port );
 
     double time = 100.0;
 
@@ -55,13 +55,13 @@ int ServerMain()
     uint8_t privateKey[KeyBytes];
     memset( privateKey, 0, KeyBytes );
     
-    Server server( GetDefaultAllocator(), privateKey, Address( "127.0.0.1", ServerPort ), config, adapter, time );
+    Server server( GetDefaultAllocator(), privateKey, Address( "127.0.0.1", server_port ), config, foo_adapter, time );
     
     server.Start( MaxClients );
     
-    server.SetLatency(250.0f);
-    server.SetJitter(250.0f);
-    server.SetPacketLoss(50.0f);
+    server.SetLatency(0.0f);
+    server.SetJitter(0.0f);
+    server.SetPacketLoss(0.0f);
 
     char addressString[256];
     server.GetAddress().ToString( addressString, sizeof( addressString ) );
@@ -86,6 +86,13 @@ int ServerMain()
                     printf("sending message with sequence: %d\n", sequence);
                     server.SendMessage(i, UNRELIABLE_CHANNEL, message);
                     sequence++;
+                }
+                
+                FooMessage *foo_message = (FooMessage *)server.CreateMessage(i, FOO_MESSAGE);
+                if(foo_message) {
+                    foo_message->foo = 42;
+                    printf("sending foo message with foo: %d\n", foo_message->foo);
+                    server.SendMessage(i, RELIABLE_CHANNEL, foo_message);
                 }
             }
         }
