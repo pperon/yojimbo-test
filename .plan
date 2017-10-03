@@ -1,6 +1,5 @@
 .plan
 
-- Create and send a block message
 - Create a serialiable object and add to message. (See TestObject in test.cpp)
 - Create a high number of serializable objects, send and verify.
 - Create block message that is larger than max packet size (fragmented)
