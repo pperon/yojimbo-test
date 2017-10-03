@@ -21,6 +21,33 @@ inline int GetNumBitsForMessage( uint16_t sequence )
     return messageBitsArray[index];
 }
 
+struct Bar {
+    int x;
+    int y;
+    int z;
+};
+
+struct BarObject : public Serializable
+{
+    Bar data;
+    void Init()
+    {
+        data.x = 1;
+        data.y = 2;
+        data.z = 3;
+    }
+
+    template <typename Stream> bool Serialize(Stream &stream)
+    {
+        serialize_int(stream, data.x, 0, 10);
+        serialize_int(stream, data.y, 0, 10);
+        serialize_bits(stream, data.z, 2);
+        // Do I need this? --> serialize_align(stream);
+    }
+
+    YOJIMBO_VIRTUAL_SERIALIZE_FUNCTIONS();
+};
+
 struct TestMessage : public Message
 {
     uint16_t sequence;
