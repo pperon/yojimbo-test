@@ -73,6 +73,17 @@ int ServerMain()
 
     uint16_t  sequence = 0;
 
+    
+    /*
+    const int bytesWritten = writeStream.GetBytesProcessed();
+
+    BarObject barObjectRead;
+    ReadStream readStream(GetDefaultAllocator(), buffer, bytesWritten);
+    barObjectRead.Serialize(readStream);
+    bar = barObjectRead.data;
+    printf("Derp: %d %d %d\n", bar.x, bar.y, bar.z);
+    */
+
     while ( !quit )
     {
         server.SendPackets();
@@ -93,6 +104,27 @@ int ServerMain()
                     foo_message->foo = 42;
                     printf("sending foo message with foo: %d\n", foo_message->foo);
                     server.SendMessage(i, RELIABLE_CHANNEL, foo_message);
+                }
+
+                FooBlockMessage *foo_block_message = (FooBlockMessage *)server.CreateMessage(i, FOO_BLOCK_MESSAGE);
+                if(foo_block_message) {
+                    foo_block_message->foo = 42;
+                    printf("sending foo message with foo: %d\n", foo_block_message->foo);
+
+                    // testing object serialization
+                    const int BufferSize = 1024;
+                    uint8_t buffer[BufferSize];
+                    WriteStream writeStream(GetDefaultAllocator(), buffer, BufferSize);
+                    BarObject barObjectWrote;
+                    barObjectWrote.Init();
+                    struct Bar bar = barObjectWrote.data;
+                    printf("Uh: %d %d %d\n", bar.x, bar.y, bar.z);
+                    barObjectWrote.Serialize(writeStream);
+                    writeStream.Flush();
+                    int bytes_processed = writeStream.GetBytesProcessed();
+                    uint8_t *stream_data = writeStream.GetData();
+                    foo_block_message->AttachBlock(GetDefaultAllocator(), stream_data, bytes_processed);
+                    server.SendMessage(i, RELIABLE_CHANNEL, foo_block_message);
                 }
             }
         }

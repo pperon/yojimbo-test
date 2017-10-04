@@ -43,6 +43,7 @@ struct BarObject : public Serializable
         serialize_int(stream, data.y, 0, 10);
         serialize_bits(stream, data.z, 2);
         // Do I need this? --> serialize_align(stream);
+        return true;
     }
 
     YOJIMBO_VIRTUAL_SERIALIZE_FUNCTIONS();
