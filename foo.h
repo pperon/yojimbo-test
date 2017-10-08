@@ -95,6 +95,24 @@ struct FooMessage : public Message
     YOJIMBO_VIRTUAL_SERIALIZE_FUNCTIONS();
 };
 
+struct TestBlockMessage : public BlockMessage
+{
+    uint16_t sequence;
+
+    TestBlockMessage()
+    {
+        sequence = 0;
+    }
+
+    template <typename Stream> bool Serialize( Stream & stream )
+    {        
+        serialize_bits( stream, sequence, 16 );
+        return true;
+    }
+
+    YOJIMBO_VIRTUAL_SERIALIZE_FUNCTIONS();
+};
+
 struct FooBlockMessage : public BlockMessage
 {
     uint16_t foo;
@@ -118,6 +136,7 @@ enum FooMessageType
     FOO_MESSAGE,
     FOO_BLOCK_MESSAGE,
     TEST_MESSAGE,
+    TEST_BLOCK_MESSAGE,
     NUM_FOO_MESSAGE_TYPES
 };
 
@@ -125,6 +144,7 @@ YOJIMBO_MESSAGE_FACTORY_START(FooMessageFactory, NUM_FOO_MESSAGE_TYPES);
     YOJIMBO_DECLARE_MESSAGE_TYPE(FOO_MESSAGE, FooMessage );
     YOJIMBO_DECLARE_MESSAGE_TYPE(FOO_BLOCK_MESSAGE, FooBlockMessage );
     YOJIMBO_DECLARE_MESSAGE_TYPE(TEST_MESSAGE, TestMessage );
+    YOJIMBO_DECLARE_MESSAGE_TYPE(TEST_BLOCK_MESSAGE, TestBlockMessage );
 YOJIMBO_MESSAGE_FACTORY_FINISH();
 
 class FooAdapter : public Adapter

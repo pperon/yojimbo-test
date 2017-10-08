@@ -38,6 +38,11 @@
 using namespace yojimbo;
 
 static volatile int quit = 0;
+const int MaxPacketSize = 16 * 1024;
+const int MaxSnapshotSize = 8 * 1024;
+const int MaxBlockSize = 64 * 1024;
+static const int UNRELIABLE_UNORDERED_CHANNEL = 0;
+static const int RELIABLE_ORDERED_CHANNEL = 1;
 
 void interrupt_handler( int /*dummy*/ )
 {
@@ -55,9 +60,16 @@ int ClientMain( int argc, char * argv[] )
     printf( "client id is %.16" PRIx64 "\n", clientId );
 
     ClientServerConfig config;
+    config.maxPacketSize = MaxPacketSize;
+    config.clientMemory = 10 * 1024 * 1024;
+    config.serverGlobalMemory = 10 * 1024 * 1024;
+    config.serverPerClientMemory = 10 * 1024 * 1024;
     config.numChannels = 2;
-    config.channel[0].type = CHANNEL_TYPE_RELIABLE_ORDERED;
-    config.channel[1].type = CHANNEL_TYPE_UNRELIABLE_UNORDERED;
+    config.channel[RELIABLE_ORDERED_CHANNEL].type = CHANNEL_TYPE_RELIABLE_ORDERED;
+    config.channel[RELIABLE_ORDERED_CHANNEL].maxBlockSize = MaxBlockSize;
+    config.channel[RELIABLE_ORDERED_CHANNEL].blockFragmentSize = 1024;
+    config.channel[UNRELIABLE_UNORDERED_CHANNEL].type = CHANNEL_TYPE_UNRELIABLE_UNORDERED;
+    config.channel[UNRELIABLE_UNORDERED_CHANNEL].maxBlockSize = MaxSnapshotSize;
 
     Client client( GetDefaultAllocator(), Address("0.0.0.0"), config, foo_adapter, time );
     client.SetLatency(0.0f);
@@ -93,28 +105,80 @@ int ClientMain( int argc, char * argv[] )
     {
         client.SendPackets();
         client.ReceivePackets();
-
         while(true) {
-            Message * message = client.ReceiveMessage(UNRELIABLE_CHANNEL);
-            if(!message) {
+            //* Receive UNRELIABLE messages
+            Message *unreliable_message = client.ReceiveMessage(UNRELIABLE_CHANNEL);
+            if(!unreliable_message) {
                 break;
             }
 
-            switch(message->GetType()) {
+            switch(unreliable_message->GetType()) {
                 case TEST_MESSAGE:
                 {
-                    TestMessage *testMessage = (TestMessage *)message;
-                    printf("Received message with sequence: %d\n", testMessage->sequence);
+                    TestMessage *testMessage = (TestMessage *)unreliable_message;
+                    (void)testMessage;
+                    printf("Received unreliable message with sequence\n");
+                    break;
                 }
                 case FOO_MESSAGE:
                 {
-                    FooMessage *foo_message = (FooMessage *)message;
-                    printf("GOT FOO YO %d\n", foo_message->foo);
+                    FooMessage *foo_message = (FooMessage *)unreliable_message;
+                    (void)foo_message;
+                    printf("GOT UNRELIABLE FOO YO \n");
+                    break;
+                }
+                case FOO_BLOCK_MESSAGE:
+                {
+                    FooBlockMessage *foo_block_message = (FooBlockMessage *)unreliable_message;
+                    (void)foo_block_message;
+                    printf("GOT UNRELIABLE BLOCK!\n");
+                    break;
                 }
                 break;
             }
+            client.ReleaseMessage(unreliable_message);
+            //*/ 
+            // Receive RELIABLE messages
+            Message *reliable_message = client.ReceiveMessage(RELIABLE_CHANNEL);
+            if(!reliable_message) {
+                break;
+            }
 
-            client.ReleaseMessage(message);
+            switch(reliable_message->GetType()) {
+                
+                case TEST_MESSAGE:
+                {
+                    TestMessage *testMessage = (TestMessage *)reliable_message;
+                    (void)testMessage;
+                    printf("Received message with sequence\n");
+                }
+                break;
+
+                case FOO_MESSAGE:
+                {
+                    FooMessage *foo_message = (FooMessage *)reliable_message;
+                    (void)foo_message;
+                    printf("GOT FOO YO \n");
+                }
+                break;
+
+                case FOO_BLOCK_MESSAGE:
+                {
+                    FooBlockMessage *foo_block_message = (FooBlockMessage *)reliable_message;
+                    (void)foo_block_message;
+                    printf("GOT BLOCK!\n");
+                }
+                break;
+
+                case TEST_BLOCK_MESSAGE:
+                {
+                    TestBlockMessage *test_block_message = (TestBlockMessage *)reliable_message;
+                    (void)test_block_message;
+                    printf("GOT TEST BLOCK MESSAGE\n");
+                }
+                break;
+            }
+            client.ReleaseMessage(reliable_message);
         }
 
         if ( client.IsDisconnected() )

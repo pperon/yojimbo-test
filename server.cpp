@@ -35,6 +35,11 @@
 using namespace yojimbo;
 
 static volatile int quit = 0;
+const int MaxPacketSize = 16 * 1024;
+const int MaxSnapshotSize = 8 * 1024;
+const int MaxBlockSize = 64 * 1024;
+static const int UNRELIABLE_UNORDERED_CHANNEL = 0;
+static const int RELIABLE_ORDERED_CHANNEL = 1;
 
 void interrupt_handler( int /*dummy*/ )
 {
@@ -48,9 +53,16 @@ int ServerMain()
     double time = 100.0;
 
     ClientServerConfig config;
+    config.maxPacketSize = MaxPacketSize;
+    config.clientMemory = 10 * 1024 * 1024;
+    config.serverGlobalMemory = 10 * 1024 * 1024;
+    config.serverPerClientMemory = 10 * 1024 * 1024;
     config.numChannels = 2;
-    config.channel[0].type = CHANNEL_TYPE_RELIABLE_ORDERED;
-    config.channel[1].type = CHANNEL_TYPE_UNRELIABLE_UNORDERED;
+    config.channel[RELIABLE_ORDERED_CHANNEL].type = CHANNEL_TYPE_RELIABLE_ORDERED;
+    config.channel[RELIABLE_ORDERED_CHANNEL].maxBlockSize = MaxBlockSize;
+    config.channel[RELIABLE_ORDERED_CHANNEL].blockFragmentSize = 1024;
+    config.channel[UNRELIABLE_UNORDERED_CHANNEL].type = CHANNEL_TYPE_UNRELIABLE_UNORDERED;
+    config.channel[UNRELIABLE_UNORDERED_CHANNEL].maxBlockSize = MaxSnapshotSize;
 
     uint8_t privateKey[KeyBytes];
     memset( privateKey, 0, KeyBytes );
@@ -91,28 +103,53 @@ int ServerMain()
         
         for(int i = 0; i < MaxClients; i++) {
             if(server.IsClientConnected(i)) {
-                TestMessage *message = (TestMessage *)server.CreateMessage(i, TEST_MESSAGE);
-                if(message) {
-                    message->sequence = sequence;
-                    printf("sending message with sequence: %d\n", sequence);
-                    server.SendMessage(i, UNRELIABLE_CHANNEL, message);
-                    sequence++;
+
+                if(!server.CanSendMessage(i, RELIABLE_ORDERED_CHANNEL)) {
+                    break;
                 }
                 
+                //*
+                TestBlockMessage * message = (TestBlockMessage*) server.CreateMessage(i, TEST_BLOCK_MESSAGE );
+                if(message) {
+                    message->sequence = sequence;
+                    const int blockSize = 1 + ( ( i * 901 ) % 3333 );
+                    uint8_t * blockData = server.AllocateBlock(i, blockSize);//(uint8_t*) YOJIMBO_ALLOCATE( GetDefaultAllocator(), blockSize );
+                    if(blockData) {
+                        for ( int j = 0; j < blockSize; ++j )
+                            blockData[j] = i + j;
+                        server.AttachBlockToMessage(i, message, blockData, blockSize);
+                        //message->AttachBlock( GetDefaultAllocator(), blockData, blockSize );
+                        printf("Sending test block message with length: %d\n", blockSize);
+                        server.SendMessage(i, RELIABLE_CHANNEL, message );
+                        sequence++;
+                    }
+                }
+                //*/
+
+                /*
                 FooMessage *foo_message = (FooMessage *)server.CreateMessage(i, FOO_MESSAGE);
                 if(foo_message) {
                     foo_message->foo = 42;
-                    printf("sending foo message with foo: %d\n", foo_message->foo);
+                    printf("sending foo message\n");
                     server.SendMessage(i, RELIABLE_CHANNEL, foo_message);
                 }
+                //*/ 
 
+                
+                /*
                 FooBlockMessage *foo_block_message = (FooBlockMessage *)server.CreateMessage(i, FOO_BLOCK_MESSAGE);
                 if(foo_block_message) {
-                    foo_block_message->foo = 42;
-                    printf("sending foo message with foo: %d\n", foo_block_message->foo);
+                    //foo_block_message->foo = 42;
+                    //printf("sending foo block message\n");
+                    //const int blockSize = 1000;
+                    //uint8_t * blockData = (uint8_t*) YOJIMBO_ALLOCATE( GetDefaultAllocator(), blockSize );
+                    //for ( int j = 0; j < blockSize; ++j )
+                    //    blockData[j] = i + j;
+                    //foo_block_message->AttachBlock( GetDefaultAllocator(), blockData, blockSize );
+                    //server.SendMessage(i, RELIABLE_CHANNEL, foo_block_message);
 
                     // testing object serialization
-                    const int BufferSize = 1024;
+                    const int BufferSize = 16;
                     uint8_t buffer[BufferSize];
                     WriteStream writeStream(GetDefaultAllocator(), buffer, BufferSize);
                     BarObject barObjectWrote;
@@ -122,10 +159,33 @@ int ServerMain()
                     barObjectWrote.Serialize(writeStream);
                     writeStream.Flush();
                     int bytes_processed = writeStream.GetBytesProcessed();
-                    uint8_t *stream_data = writeStream.GetData();
-                    foo_block_message->AttachBlock(GetDefaultAllocator(), stream_data, bytes_processed);
-                    server.SendMessage(i, RELIABLE_CHANNEL, foo_block_message);
+                    printf("bytes: %d\n", bytes_processed);
+                    const uint8_t *stream_data = writeStream.GetData();
+                    uint8_t *ptr = (uint8_t *)malloc(bytes_processed);
+                    if(ptr) {
+                        memcpy(ptr, stream_data, bytes_processed);
+                        foo_block_message->AttachBlock(GetDefaultAllocator(), ptr, bytes_processed);
+                        server.SendMessage(i, RELIABLE_CHANNEL, foo_block_message);
+                    }
+
                 }
+                //*/
+                
+                
+                if(!server.CanSendMessage(i, UNRELIABLE_UNORDERED_CHANNEL)) {
+                    break;
+                }
+
+                //*
+                TestMessage *unreliable_message = (TestMessage *)server.CreateMessage(i, TEST_MESSAGE);
+                if(unreliable_message) {
+                    //unreliable_message->sequence = sequence;
+                    printf("sending unreliable message\n");
+                    server.SendMessage(i, UNRELIABLE_CHANNEL, unreliable_message);
+                    sequence++;
+                }
+                //*/
+               
             }
         }
 
