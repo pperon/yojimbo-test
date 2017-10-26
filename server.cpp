@@ -29,8 +29,8 @@
 //#include "shared.h"
 #include "foo.h"
 
-#define RELIABLE_CHANNEL 0
-#define UNRELIABLE_CHANNEL 1
+#define UNRELIABLE_CHANNEL 0
+#define RELIABLE_CHANNEL 1
 
 using namespace yojimbo;
 
