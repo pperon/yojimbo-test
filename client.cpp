@@ -108,10 +108,11 @@ int ClientMain( int argc, char * argv[] )
         while(true) {
             //* Receive UNRELIABLE messages
             Message *unreliable_message = client.ReceiveMessage(UNRELIABLE_CHANNEL);
+
             if(!unreliable_message) {
                 break;
             }
-
+            printf("Received unreliable message\n");
             switch(unreliable_message->GetType()) {
                 case TEST_MESSAGE:
                 {
@@ -143,7 +144,7 @@ int ClientMain( int argc, char * argv[] )
             if(!reliable_message) {
                 break;
             }
-
+            printf("Received reliable message\n");
             switch(reliable_message->GetType()) {
                 
                 case TEST_MESSAGE:

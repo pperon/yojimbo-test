@@ -84,7 +84,7 @@ int ServerMain()
     signal( SIGINT, interrupt_handler ); 
 
     uint16_t  sequence = 0;
-
+    (void)sequence;
     
     /*
     const int bytesWritten = writeStream.GetBytesProcessed();
@@ -108,7 +108,7 @@ int ServerMain()
                     break;
                 }
                 
-                /*
+                //*
                 TestBlockMessage * message = (TestBlockMessage*) server.CreateMessage(i, TEST_BLOCK_MESSAGE );
                 if(message) {
                     message->sequence = sequence;
@@ -136,7 +136,7 @@ int ServerMain()
                 //*/ 
 
                 
-                //*
+                /*
                 FooBlockMessage *foo_block_message = (FooBlockMessage *)server.CreateMessage(i, FOO_BLOCK_MESSAGE);
                 if(foo_block_message) {
                     //foo_block_message->foo = 42;
@@ -157,35 +157,30 @@ int ServerMain()
                     barObjectWrote.Serialize(writeStream);
                     writeStream.Flush();
                     int bytes_processed = writeStream.GetBytesProcessed();
+                    (void)bytes_processed;
                     const uint8_t *stream_data = writeStream.GetData();
                     (void)stream_data;
-                    uint8_t *ptr = (uint8_t *)malloc(bytes_processed);
+                    
+                    // TODO: EXAMPLE Deserialize stream_data into a BarObject
+                    BarObject barObjectRead;
+                    ReadStream readStream(GetDefaultAllocator(), stream_data, bytes_processed);
+                    barObjectRead.Serialize(readStream);
+                    
+                    //uint8_t *ptr = (uint8_t *)malloc(bytes_processed);
+                    uint8_t *ptr = server.AllocateBlock(i, bytes_processed);
                     if(ptr) {
-                        printf("yoo\n"); 
-                        const int blockSize = 1 + ( ( i * 901 ) % 3333 );
-                        uint8_t * blockData = server.AllocateBlock(i, blockSize);//(uint8_t*) YOJIMBO_ALLOCATE( GetDefaultAllocator(), blockSize );
-                        if(blockData) {
-                            for ( int j = 0; j < blockSize; ++j )
-                                blockData[j] = i + j;
-                            server.AttachBlockToMessage(i, foo_block_message, blockData, blockSize);
-                            //foo_block_message->AttachBlock( GetDefaultAllocator(), blockData, blockSize );
-                            server.SendMessage(i, RELIABLE_CHANNEL, foo_block_message);
-                        }
-                    //    memcpy(ptr, stream_data, bytes_processed);
-                    //    foo_block_message->AttachBlock(GetDefaultAllocator(), ptr, bytes_processed);
-                    //    foo_block_message->AttachBlock(GetDefaultAllocator(), blockData, blockSize);
-                    //    server.SendMessage(i, RELIABLE_CHANNEL, foo_block_message);
+                        memcpy(ptr, stream_data, bytes_processed);
+                        server.AttachBlockToMessage(i, foo_block_message, ptr, bytes_processed);
+                        server.SendMessage(i, RELIABLE_CHANNEL, foo_block_message);
                     }
-
                 }
                 //*/
-                
                 
                 if(!server.CanSendMessage(i, UNRELIABLE_UNORDERED_CHANNEL)) {
                     break;
                 }
 
-                //*
+                /*
                 TestMessage *unreliable_message = (TestMessage *)server.CreateMessage(i, TEST_MESSAGE);
                 if(unreliable_message) {
                     //unreliable_message->sequence = sequence;
