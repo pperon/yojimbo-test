@@ -32,8 +32,8 @@
 //#include "shared.h"
 #include "foo.h"
 
-#define RELIABLE_CHANNEL 0
-#define UNRELIABLE_CHANNEL 1
+#define UNRELIABLE_CHANNEL 0
+#define RELIABLE_CHANNEL 1
 
 using namespace yojimbo;
 
@@ -106,9 +106,9 @@ int ClientMain( int argc, char * argv[] )
         client.SendPackets();
         client.ReceivePackets();
         while(true) {
-            //* Receive UNRELIABLE messages
+            /* Receive UNRELIABLE messages
             Message *unreliable_message = client.ReceiveMessage(UNRELIABLE_CHANNEL);
-
+            
             if(!unreliable_message) {
                 break;
             }
@@ -144,7 +144,6 @@ int ClientMain( int argc, char * argv[] )
             if(!reliable_message) {
                 break;
             }
-            printf("Received reliable message\n");
             switch(reliable_message->GetType()) {
                 
                 case TEST_MESSAGE:
@@ -167,7 +166,14 @@ int ClientMain( int argc, char * argv[] )
                 {
                     FooBlockMessage *foo_block_message = (FooBlockMessage *)reliable_message;
                     (void)foo_block_message;
-                    printf("GOT BLOCK!\n");
+                    const int block_size = foo_block_message->GetBlockSize();
+                    const uint8_t *block = foo_block_message->GetBlockData();
+                    (void)block;
+                    BarObject barObjectRead;
+                    ReadStream readStream(GetDefaultAllocator(), block, block_size);
+                    barObjectRead.Serialize(readStream);
+                    printf("GOT BLOCK! %d %d %d\n", barObjectRead.data.x, barObjectRead.data.y, 
+                                                    barObjectRead.data.z);
                 }
                 break;
 

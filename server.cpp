@@ -108,7 +108,7 @@ int ServerMain()
                     break;
                 }
                 
-                //*
+                /*
                 TestBlockMessage * message = (TestBlockMessage*) server.CreateMessage(i, TEST_BLOCK_MESSAGE );
                 if(message) {
                     message->sequence = sequence;
@@ -136,7 +136,7 @@ int ServerMain()
                 //*/ 
 
                 
-                /*
+                //*
                 FooBlockMessage *foo_block_message = (FooBlockMessage *)server.CreateMessage(i, FOO_BLOCK_MESSAGE);
                 if(foo_block_message) {
                     //foo_block_message->foo = 42;
