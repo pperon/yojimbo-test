@@ -767,7 +767,6 @@ void reliable_endpoint_send_packet( struct reliable_endpoint_t * endpoint, uint8
         int num_fragments = ( packet_bytes / endpoint->config.fragment_size ) + ( ( packet_bytes % endpoint->config.fragment_size ) != 0 ? 1 : 0 );
 
         reliable_printf( RELIABLE_LOG_LEVEL_DEBUG, "[%s] sending packet %d as %d fragments\n", endpoint->config.name, sequence, num_fragments );
-        printf("[%s] sending packet %d as %d fragments\n", endpoint->config.name, sequence, num_fragments );
 
         reliable_assert( num_fragments >= 1 );
         reliable_assert( num_fragments <= endpoint->config.max_fragments );
