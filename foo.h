@@ -12,6 +12,7 @@ using namespace yojimbo;
 const uint64_t protocol_id = 0x11223344556677ULL;
 const int client_port = 30000;
 const int server_port = 40000;
+const int stuff_byte_count = 2032;
 
 inline int GetNumBitsForMessage( uint16_t sequence )
 {
@@ -25,16 +26,22 @@ struct Bar {
     int x;
     int y;
     int z;
+    uint8_t stuff[stuff_byte_count];
 };
 
 struct BarObject : public Serializable
 {
     Bar data;
+
     void Init()
     {
         data.x = 1;
         data.y = 2;
         data.z = 3;
+
+        for(int i = 0; i < stuff_byte_count; i++) {
+            data.stuff[i] = i;
+        }
     }
 
     template <typename Stream> bool Serialize(Stream &stream)
@@ -42,6 +49,7 @@ struct BarObject : public Serializable
         serialize_int(stream, data.x, 0, 10);
         serialize_int(stream, data.y, 0, 10);
         serialize_bits(stream, data.z, 2);
+        serialize_bytes(stream, data.stuff, stuff_byte_count); 
         // Do I need this? --> serialize_align(stream);
         return true;
     }

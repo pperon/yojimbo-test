@@ -149,7 +149,7 @@ int ServerMain()
                     //server.SendMessage(i, RELIABLE_CHANNEL, foo_block_message);
 
                     // testing object serialization
-                    const int BufferSize = 16;
+                    const int BufferSize = 2048;
                     uint8_t buffer[BufferSize];
                     WriteStream writeStream(GetDefaultAllocator(), buffer, BufferSize);
                     BarObject barObjectWrote;

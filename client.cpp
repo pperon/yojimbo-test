@@ -172,8 +172,8 @@ int ClientMain( int argc, char * argv[] )
                     BarObject barObjectRead;
                     ReadStream readStream(GetDefaultAllocator(), block, block_size);
                     barObjectRead.Serialize(readStream);
-                    printf("GOT BLOCK! %d %d %d\n", barObjectRead.data.x, barObjectRead.data.y, 
-                                                    barObjectRead.data.z);
+                    printf("GOT BLOCK! %d %d %d %d\n", barObjectRead.data.x, barObjectRead.data.y, 
+                                                    barObjectRead.data.z, barObjectRead.data.stuff[2000]);
                 }
                 break;
 
