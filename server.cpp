@@ -67,7 +67,7 @@ int ServerMain()
     uint8_t privateKey[KeyBytes];
     memset( privateKey, 0, KeyBytes );
     
-    Server server( GetDefaultAllocator(), privateKey, Address( "127.0.0.1", server_port ), config, foo_adapter, time );
+    Server server( *foo_allocator, privateKey, Address( "127.0.0.1", server_port ), config, foo_adapter, time );
     
     server.Start( MaxClients );
     

@@ -174,4 +174,34 @@ class FooAdapter : public Adapter
         }
 };
 
+
+class FooAllocator : public Allocator
+{
+public:
+
+    void * Allocate( size_t size, const char * file, int line ) 
+    {
+        printf("foo allocate!\n");
+        void * p = malloc( size );
+
+        if ( !p )
+        {
+            SetErrorLevel( ALLOCATOR_ERROR_OUT_OF_MEMORY );
+            return NULL;
+        }
+
+        return p;
+    }
+
+    void Free( void * p, const char * file, int line ) 
+    {
+        printf("foo free!\n");
+        if ( !p )
+            return;
+
+        free( p );
+    }
+};
+
 static FooAdapter foo_adapter;
+static Allocator *foo_allocator = new FooAllocator();
